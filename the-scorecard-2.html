@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Scorecard — Ohio Golf</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,700;0,6..96,800;1,6..96,400;1,6..96,500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --paper: #f4ede1;
+      --paper-warm: #ebe1cf;
+      --paper-deep: #e0d3b8;
+      --ink: #1a1612;
+      --ink-soft: #3d342a;
+      --ink-mute: #6b5d4d;
+      --forest: #1c3d2e;
+      --forest-deep: #0f2419;
+      --forest-light: #2d5942;
+      --burgundy: #6b1f2a;
+      --burgundy-deep: #4a1219;
+      --gold: #b8893d;
+      --gold-deep: #8b6520;
+      --cream: #faf6ed;
+    }
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      background-image:
+        radial-gradient(circle at 20% 35%, rgba(184, 137, 61, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 75% 70%, rgba(28, 61, 46, 0.05) 0%, transparent 50%),
+        repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,0,0,0.012) 2px, rgba(0,0,0,0.012) 3px);
+    }
+    .display { font-family: 'Bodoni Moda', Georgia, serif; }
+    .editorial { font-family: 'Playfair Display', Georgia, serif; }
+    .body-serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .paper {
+      background: var(--cream);
+      background-image:
+        radial-gradient(ellipse at top left, rgba(184, 137, 61, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(107, 31, 42, 0.04) 0%, transparent 50%);
+      box-shadow: 0 0 60px rgba(26, 22, 18, 0.08), 0 20px 80px -20px rgba(26, 22, 18, 0.25);
+    }
+    .ornament { display: flex; align-items: center; gap: 0.75rem; color: var(--gold); }
+    .ornament::before, .ornament::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-deep) 50%, transparent);
+    }
+    .score-numeral {
+      font-family: 'Bodoni Moda', serif;
+      font-feature-settings: 'lnum' 1;
+      letter-spacing: -0.02em;
+    }
+    .hole-numeral {
+      font-family: 'Bodoni Moda', serif;
+      font-weight: 800; font-style: italic;
+      letter-spacing: -0.04em; line-height: 0.85;
+    }
+    .uppercase-tight {
+      text-transform: uppercase; letter-spacing: 0.22em; font-weight: 600;
+    }
+    .score-btn {
+      font-family: 'Bodoni Moda', serif; font-weight: 500;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .score-btn:hover { transform: translateY(-1px); }
+    .score-btn:active { transform: translateY(0); }
+    .score-btn-active {
+      background: var(--forest); color: var(--cream);
+      box-shadow: 0 4px 12px rgba(28, 61, 46, 0.3);
+    }
+    .score-btn-idle {
+      background: var(--paper-warm); color: var(--ink);
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .score-btn-idle:hover { background: var(--paper-deep); }
+    .tab { transition: all 0.2s ease; position: relative; }
+    .tab-active { color: var(--forest-deep); font-weight: 600; }
+    .tab-active::after {
+      content: ''; position: absolute; bottom: -1px; left: 25%; right: 25%;
+      height: 2px; background: var(--burgundy);
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--forest-deep) 0%, var(--forest) 100%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(184, 137, 61, 0.15) 0%, transparent 35%),
+        radial-gradient(circle at 85% 80%, rgba(184, 137, 61, 0.08) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .map-frame { position: relative; background: var(--forest-deep); padding: 4px; }
+    .map-frame::after {
+      content: ''; position: absolute; inset: 4px; pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(184, 137, 61, 0.4);
+    }
+    .btn-primary {
+      background: var(--forest); color: var(--cream);
+      font-family: 'Cormorant Garamond', serif; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem;
+      padding: 0.75rem 1.25rem; border: 1px solid var(--forest-light);
+      transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(28, 61, 46, 0.2);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--forest-deep); box-shadow: 0 4px 12px rgba(28, 61, 46, 0.35);
+    }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-burgundy {
+      background: var(--burgundy); color: var(--cream);
+      font-family: 'Cormorant Garamond', serif; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem;
+      padding: 0.75rem 1.25rem; border: 1px solid var(--burgundy-deep);
+      transition: all 0.2s ease;
+    }
+    .btn-burgundy:hover { background: var(--burgundy-deep); }
+    .btn-gold {
+      background: var(--gold); color: var(--ink);
+      font-family: 'Cormorant Garamond', serif; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.7rem;
+      padding: 0.5rem 0.85rem; border: 1px solid var(--gold-deep);
+      transition: all 0.2s ease;
+    }
+    .btn-gold:hover { background: var(--gold-deep); color: var(--cream); }
+    .btn-ghost {
+      background: transparent; color: var(--ink-soft);
+      font-family: 'Cormorant Garamond', serif; letter-spacing: 0.08em;
+      text-transform: uppercase; font-size: 0.7rem; font-weight: 600;
+      padding: 0.5rem 0.85rem; border: 1px solid var(--ink-soft);
+      transition: all 0.2s ease;
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+    .btn-ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+    .score-eagle { background: var(--gold); color: var(--ink); }
+    .score-birdie { background: var(--burgundy); color: var(--cream); }
+    .score-par { background: var(--forest); color: var(--cream); }
+    .score-bogey { background: #4a5568; color: var(--cream); }
+    .score-double { background: var(--ink); color: var(--paper); }
+    .score-empty { background: transparent; color: var(--ink-mute); border: 1px dashed var(--ink-mute); }
+    .scorecard-table { width: 100%; border-collapse: collapse; font-family: 'Cormorant Garamond', serif; }
+    .scorecard-table th {
+      background: var(--ink); color: var(--paper);
+      padding: 0.6rem 0.5rem; font-size: 0.65rem;
+      letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600;
+    }
+    .scorecard-table td {
+      padding: 0.55rem 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.08); font-size: 0.95rem;
+    }
+    .scorecard-table tr.subtotal { background: rgba(184, 137, 61, 0.12); font-weight: 700; }
+    .scorecard-table tr.subtotal td {
+      border-top: 2px solid var(--gold-deep); border-bottom: 2px solid var(--gold-deep);
+    }
+    .scorecard-table tr.total { background: var(--ink); color: var(--paper); }
+    .scorecard-table tr.total td {
+      border-color: var(--ink); font-weight: 700; padding: 0.75rem 0.5rem;
+    }
+    .modal-bg {
+      background: rgba(15, 36, 25, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .course-row { transition: all 0.15s ease; border-left: 3px solid transparent; }
+    .course-row:hover { background: var(--paper-warm); border-left-color: var(--gold); }
+    .course-row.active { background: var(--paper-deep); border-left-color: var(--burgundy); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--paper-warm); }
+    ::-webkit-scrollbar-thumb { background: var(--ink-mute); border-radius: 3px; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease-out both; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .fade-in { animation: fadeIn 0.3s ease-out both; }
+    .dot-sep::before {
+      content: '·'; margin: 0 0.6em; color: var(--gold); font-weight: 700;
+    }
+    .holes-dropdown {
+      font-family: 'Cormorant Garamond', serif;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      font-weight: 600; font-size: 0.7rem;
+      padding: 0.65rem 2.5rem 0.65rem 1.25rem;
+      border: 1px solid var(--gold);
+      background: rgba(244, 237, 225, 0.08);
+      color: var(--cream);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b8893d' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      background-size: 10px;
+    }
+    .holes-dropdown:hover { background-color: rgba(184, 137, 61, 0.15); }
+    .holes-dropdown option {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Cormorant Garamond', serif;
+    }
+    .stat-card { text-align: center; padding: 0.5rem; }
+    .stat-label {
+      font-size: 0.6rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--ink-mute); font-weight: 600;
+    }
+    .stat-value {
+      font-family: 'Bodoni Moda', serif; font-size: 1.6rem;
+      font-weight: 500; color: var(--ink);
+      letter-spacing: -0.02em; line-height: 1.1;
+    }
+    .stat-value-good { color: var(--forest); }
+    .stat-value-bad { color: var(--burgundy); }
+    .divider-fancy {
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem 1.5rem; gap: 0.75rem; color: var(--gold-deep);
+    }
+    .divider-fancy::before, .divider-fancy::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+    }
+    .divider-fancy span {
+      font-family: 'Bodoni Moda', serif; font-style: italic; font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function buildHoles(totalPar, totalYards, par3Count = 4, par5Count = 4) {
+      const par4Count = 18 - par3Count - par5Count;
+      const baseTotal = par3Count * 3 + par4Count * 4 + par5Count * 5;
+      let p3 = par3Count, p4 = par4Count, p5 = par5Count;
+      let diff = totalPar - baseTotal;
+      while (diff > 0 && p4 > 0) { p4--; p5++; diff--; }
+      while (diff < 0 && p5 > 0) { p5--; p4++; diff++; }
+      while (diff > 0 && p3 > 0) { p3--; p4++; diff--; }
+      const baseYards = { 3: 175, 4: 400, 5: 540 };
+      const baseY = p3 * baseYards[3] + p4 * baseYards[4] + p5 * baseYards[5];
+      const scale = totalYards / baseY;
+      const pars = [];
+      const par5Slots = [2, 6, 14, 18, 4];
+      const par3Slots = [4, 7, 12, 17, 3, 8, 14];
+      const used = new Set();
+      for (let i = 0; i < p5; i++) for (const s of par5Slots) if (!used.has(s)) { used.add(s); pars[s - 1] = 5; break; }
+      for (let i = 0; i < p3; i++) for (const s of par3Slots) if (!used.has(s)) { used.add(s); pars[s - 1] = 3; break; }
+      for (let i = 0; i < 18; i++) if (pars[i] === undefined) pars[i] = 4;
+      const variations = [0.95, 1.05, 0.92, 1.08, 0.98, 1.04, 0.96, 1.02, 1.0,
+                         0.94, 1.06, 0.97, 1.03, 1.05, 0.95, 1.01, 0.99, 1.02];
+      return pars.map((par, i) => ({
+        number: i + 1, par,
+        yards: Math.round(baseYards[par] * scale * variations[i] / 5) * 5
+      }));
+    }
+
+    const COURSES = [
+      { id: 'miami-valley', name: 'Miami Valley Golf Club', location: 'Dayton, OH', region: 'Dayton', lat: 39.7882, lng: -84.2344, designer: 'Donald Ross · 1919', holes: buildHoles(71, 6795) },
+      { id: 'moraine', name: 'Moraine Country Club', location: 'Dayton, OH', region: 'Dayton', lat: 39.6890, lng: -84.2125, designer: 'A. W. Campbell', holes: buildHoles(72, 6900) },
+      { id: 'nccr', name: 'NCR Country Club, South', location: 'Kettering, OH', region: 'Dayton', lat: 39.6922, lng: -84.1819, designer: 'Dick Wilson', holes: buildHoles(71, 7100) },
+      { id: 'community-golf', name: 'Community Golf Club', location: 'Dayton, OH', region: 'Dayton', lat: 39.7625, lng: -84.1644, designer: 'Donald Ross', holes: buildHoles(72, 6840) },
+      { id: 'pipestone', name: 'Pipestone Golf Club', location: 'Miamisburg, OH', region: 'Dayton', lat: 39.6478, lng: -84.2872, designer: 'Arthur Hills', holes: buildHoles(72, 6939) },
+      { id: 'heatherwoode', name: 'Heatherwoode Golf Club', location: 'Springboro, OH', region: 'Dayton', lat: 39.5478, lng: -84.2275, designer: 'Denis Griffiths', holes: buildHoles(72, 6730) },
+      { id: 'camargo', name: 'Camargo Club', location: 'Indian Hill, OH', region: 'Cincinnati', lat: 39.1856, lng: -84.3247, designer: 'Seth Raynor · 1925', holes: buildHoles(70, 6636) },
+      { id: 'kenwood', name: 'Kenwood Country Club', location: 'Cincinnati, OH', region: 'Cincinnati', lat: 39.2086, lng: -84.3719, designer: 'Bill Diddel', holes: buildHoles(71, 6855) },
+      { id: 'hyde-park', name: 'Hyde Park Country Club', location: 'Cincinnati, OH', region: 'Cincinnati', lat: 39.1428, lng: -84.4256, designer: 'Donald Ross', holes: buildHoles(71, 6730) },
+      { id: 'stonelick', name: 'Stonelick Hills Golf Course', location: 'Batavia, OH', region: 'Cincinnati', lat: 39.1394, lng: -84.1289, designer: 'Michael Hurdzan', holes: buildHoles(72, 6814) },
+      { id: 'muirfield', name: 'Muirfield Village Golf Club', location: 'Dublin, OH', region: 'Columbus', lat: 40.1456, lng: -83.1581, designer: 'Jack Nicklaus', holes: buildHoles(72, 7392) },
+      { id: 'scioto', name: 'Scioto Country Club', location: 'Upper Arlington, OH', region: 'Columbus', lat: 40.0094, lng: -83.0561, designer: 'Donald Ross · 1916', holes: buildHoles(71, 7041) },
+      { id: 'the-virtues', name: 'The Virtues Golf Club', location: 'Nashport, OH', region: 'Columbus', lat: 40.0628, lng: -82.1006, designer: 'Arthur Hills', holes: buildHoles(72, 7243) },
+      { id: 'safari', name: 'Safari Golf Club', location: 'Powell, OH', region: 'Columbus', lat: 40.1483, lng: -83.0989, designer: 'Jack Kidwell', holes: buildHoles(72, 6845) },
+      { id: 'tartan-fields', name: 'The Club at Tartan Fields', location: 'Dublin, OH', region: 'Columbus', lat: 40.1789, lng: -83.1822, designer: 'Arnold Palmer', holes: buildHoles(72, 7092) },
+      { id: 'cumberland', name: 'Cumberland Trail Golf Club', location: 'Pataskala, OH', region: 'Columbus', lat: 39.9881, lng: -82.7081, designer: 'Michael Hurdzan', holes: buildHoles(72, 7200) },
+      { id: 'raymond-memorial', name: 'Raymond Memorial Golf Club', location: 'Columbus, OH', region: 'Columbus', lat: 39.9614, lng: -83.0769, designer: 'Robert Trent Jones, Jr.', holes: buildHoles(72, 6831) },
+      { id: 'denison', name: 'Denison Golf Club', location: 'Granville, OH', region: 'Columbus', lat: 40.0678, lng: -82.5189, designer: 'Donald Ross', holes: buildHoles(71, 6559) },
+      { id: 'lancaster', name: 'Lancaster Golf Club', location: 'Lancaster, OH', region: 'Columbus', lat: 39.7136, lng: -82.5994, designer: 'Donald Ross · 1909', holes: buildHoles(71, 6650) },
+      { id: 'darby-creek', name: 'Darby Creek Golf Course', location: 'Marysville, OH', region: 'Columbus', lat: 40.2364, lng: -83.3672, designer: 'Brian Huntley', holes: buildHoles(71, 6700) },
+      { id: 'apple-valley', name: 'Apple Valley Golf Club', location: 'Howard, OH', region: 'Columbus', lat: 40.4544, lng: -82.3506, designer: 'Tom Bendelow', holes: buildHoles(71, 6915) },
+      { id: 'inverness', name: 'Inverness Club', location: 'Toledo, OH', region: 'Northern Ohio', lat: 41.6256, lng: -83.6306, designer: 'Donald Ross', holes: buildHoles(71, 7255) },
+      { id: 'firestone', name: 'Firestone Country Club, South', location: 'Akron, OH', region: 'Northern Ohio', lat: 41.0050, lng: -81.5408, designer: 'Robert Trent Jones', holes: buildHoles(70, 7400) },
+      { id: 'canterbury', name: 'Canterbury Golf Club', location: 'Beachwood, OH', region: 'Northern Ohio', lat: 41.4767, lng: -81.4922, designer: 'Herbert Strong', holes: buildHoles(72, 6926) },
+      { id: 'kirtland', name: 'Kirtland Country Club', location: 'Willoughby, OH', region: 'Northern Ohio', lat: 41.6422, lng: -81.4039, designer: 'C. H. Alison', holes: buildHoles(72, 6800) },
+      { id: 'manakiki', name: 'Manakiki Golf Course', location: 'Willoughby Hills, OH', region: 'Northern Ohio', lat: 41.6336, lng: -81.4544, designer: 'Donald Ross', holes: buildHoles(72, 6625) },
+      { id: 'little-mountain', name: 'Little Mountain Country Club', location: 'Concord, OH', region: 'Northern Ohio', lat: 41.6711, lng: -81.2956, designer: 'Brian Huntley', holes: buildHoles(72, 6600) },
+      { id: 'windmill-lakes', name: 'Windmill Lakes Golf Club', location: 'Ravenna, OH', region: 'Northern Ohio', lat: 41.1564, lng: -81.2406, designer: 'Harold Paddock', holes: buildHoles(70, 6936) },
+      { id: 'whistling-straits', name: 'Whistling Straits, Straits Course', location: 'Sheboygan, WI', region: 'Midwest', lat: 43.8503, lng: -87.7311, designer: 'Pete Dye', holes: buildHoles(72, 7790) },
+      { id: 'erin-hills', name: 'Erin Hills', location: 'Hartford, WI', region: 'Midwest', lat: 43.2422, lng: -88.3789, designer: 'Hurdzan, Fry, Whitten', holes: buildHoles(72, 7845) },
+      { id: 'medinah', name: 'Medinah Country Club, No. 3', location: 'Medinah, IL', region: 'Midwest', lat: 41.9667, lng: -88.0431, designer: 'Tom Bendelow', holes: buildHoles(72, 7561) },
+      { id: 'olympia-fields', name: 'Olympia Fields, North Course', location: 'Olympia Fields, IL', region: 'Midwest', lat: 41.5256, lng: -87.6736, designer: 'Willie Park Jr.', holes: buildHoles(70, 7383) },
+      { id: 'crooked-stick', name: 'Crooked Stick Golf Club', location: 'Carmel, IN', region: 'Midwest', lat: 39.9556, lng: -86.0681, designer: 'Pete Dye', holes: buildHoles(72, 7516) },
+      { id: 'french-lick', name: 'French Lick Resort, Pete Dye', location: 'French Lick, IN', region: 'Midwest', lat: 38.5489, lng: -86.6203, designer: 'Pete Dye', holes: buildHoles(72, 8102) },
+      { id: 'oakland-hills', name: 'Oakland Hills, South Course', location: 'Bloomfield Hills, MI', region: 'Midwest', lat: 42.5467, lng: -83.2628, designer: 'Donald Ross', holes: buildHoles(72, 7445) }
+    ];
+
+    const REGIONS = ['Dayton', 'Cincinnati', 'Columbus', 'Northern Ohio', 'Midwest'];
+
+    function App() {
+      const [courseId, setCourseId] = useState(COURSES[0].id);
+      const [playMode, setPlayMode] = useState('full'); // 'front' | 'back' | 'full'
+      const [scores, setScores] = useState(Array(18).fill(0));
+      const [currentHole, setCurrentHole] = useState(1);
+      const [view, setView] = useState('play');
+      const [savedRounds, setSavedRounds] = useState([]);
+      const [showCourseList, setShowCourseList] = useState(false);
+      const [showSavePrompt, setShowSavePrompt] = useState(false);
+
+      // Derived: which range of holes are we playing?
+      const startHole = playMode === 'back' ? 10 : 1;
+      const endHole = playMode === 'front' ? 9 : 18;
+      const holesPlayed = endHole - startHole + 1;
+
+      const course = COURSES.find(c => c.id === courseId);
+      const activeHoles = course.holes.slice(startHole - 1, endHole);
+
+      useEffect(() => {
+        try {
+          const sc = localStorage.getItem('gs_scores');
+          const ch = localStorage.getItem('gs_currentHole');
+          const ci = localStorage.getItem('gs_courseId');
+          const pm = localStorage.getItem('gs_playMode');
+          const sr = localStorage.getItem('gs_savedRounds');
+          if (sc) setScores(JSON.parse(sc));
+          if (ci && COURSES.find(c => c.id === ci)) setCourseId(ci);
+          const validMode = pm && ['front', 'back', 'full'].includes(pm) ? pm : 'full';
+          if (validMode !== 'full') setPlayMode(validMode);
+          if (ch) {
+            const hole = parseInt(ch, 10);
+            const minHole = validMode === 'back' ? 10 : 1;
+            const maxHole = validMode === 'front' ? 9 : 18;
+            if (hole >= minHole && hole <= maxHole) {
+              setCurrentHole(hole);
+            } else {
+              setCurrentHole(minHole);
+            }
+          }
+          if (sr) setSavedRounds(JSON.parse(sr));
+        } catch (e) {}
+      }, []);
+
+      useEffect(() => { localStorage.setItem('gs_scores', JSON.stringify(scores)); }, [scores]);
+      useEffect(() => { localStorage.setItem('gs_currentHole', currentHole.toString()); }, [currentHole]);
+      useEffect(() => { localStorage.setItem('gs_courseId', courseId); }, [courseId]);
+      useEffect(() => { localStorage.setItem('gs_playMode', playMode); }, [playMode]);
+      useEffect(() => { localStorage.setItem('gs_savedRounds', JSON.stringify(savedRounds)); }, [savedRounds]);
+
+      const hole = course.holes[currentHole - 1];
+      const activeScores = scores.slice(startHole - 1, endHole);
+      const totalScore = activeScores.reduce((a, b) => a + b, 0);
+      const playedHoles = activeScores.filter(s => s > 0).length;
+      const playedPar = activeHoles.filter((h, i) => activeScores[i] > 0).reduce((sum, h) => sum + h.par, 0);
+      const totalPar = activeHoles.reduce((sum, h) => sum + h.par, 0);
+      const diff = totalScore - playedPar;
+      const handicapEstimate = playedHoles >= 9
+        ? Math.round((totalScore - playedPar) * (18 / playedHoles) * 0.96)
+        : null;
+
+      // Auto-prompt for save when round is complete
+      const isRoundComplete = playedHoles === holesPlayed && holesPlayed > 0;
+      useEffect(() => {
+        if (isRoundComplete && !showSavePrompt) {
+          // Small delay so the user sees the last score get registered
+          const timer = setTimeout(() => setShowSavePrompt(true), 600);
+          return () => clearTimeout(timer);
+        }
+      }, [isRoundComplete]);
+
+      const setScore = (val) => {
+        const newScores = [...scores];
+        newScores[currentHole - 1] = val;
+        setScores(newScores);
+      };
+
+      const goToHole = (n) => { if (n >= startHole && n <= endHole) setCurrentHole(n); };
+
+      // Helper to change play mode and reset currentHole to the right starting point
+      const changePlayMode = (newMode) => {
+        if (newMode === playMode) return;
+        if (scores.some(s => s > 0)) {
+          if (!confirm('Switching will reset your current scores. Continue?')) return;
+        }
+        setPlayMode(newMode);
+        setScores(Array(18).fill(0));
+        setCurrentHole(newMode === 'back' ? 10 : 1);
+        setShowSavePrompt(false);
+      };
+
+      const changeCourse = (newId) => {
+        if (scores.some(s => s > 0)) {
+          if (!confirm('Changing courses will reset your current scores. Continue?')) return;
+        }
+        setCourseId(newId);
+        setScores(Array(18).fill(0));
+        setCurrentHole(playMode === 'back' ? 10 : 1);
+        setShowCourseList(false);
+        setShowSavePrompt(false);
+      };
+
+      const saveRound = () => {
+        if (playedHoles === 0) { alert('Enter at least one score before saving.'); return; }
+        const defaultName = `${course.name} — ${new Date().toLocaleDateString()}`;
+        const name = prompt('Name this round:', defaultName);
+        if (!name) return;
+        const round = {
+          id: Date.now(), name, date: new Date().toISOString(),
+          courseId, courseName: course.name, holesPlayed, playMode,
+          scores: [...scores], totalScore, totalPar: playedPar, diff
+        };
+        setSavedRounds([round, ...savedRounds]);
+        setShowSavePrompt(false);
+      };
+
+      const dismissSavePrompt = () => {
+        setShowSavePrompt(false);
+      };
+
+      const startNewRound = () => {
+        setScores(Array(18).fill(0));
+        setCurrentHole(playMode === 'back' ? 10 : 1);
+        setShowSavePrompt(false);
+      };
+
+      const deleteRound = (id) => {
+        if (!confirm('Delete this round?')) return;
+        setSavedRounds(savedRounds.filter(r => r.id !== id));
+      };
+
+      const scoreClass = (score, par) => {
+        if (score === 0) return 'score-empty';
+        const d = score - par;
+        if (d <= -2) return 'score-eagle';
+        if (d === -1) return 'score-birdie';
+        if (d === 0) return 'score-par';
+        if (d === 1) return 'score-bogey';
+        return 'score-double';
+      };
+
+      const formatDiff = (d) => d > 0 ? `+${d}` : d === 0 ? 'E' : `${d}`;
+
+      return (
+        <div className="max-w-2xl mx-auto paper min-h-screen">
+          {/* HERO HEADER */}
+          <div className="hero text-white px-6 pt-7 pb-5 fade-up">
+            <div className="relative" style={{zIndex: 1}}>
+              <div className="text-center mb-3">
+                <div className="uppercase-tight text-xs" style={{color: 'var(--gold)'}}>
+                  The Scorecard
+                </div>
+                <div className="ornament my-2 max-w-[120px] mx-auto" />
+              </div>
+
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="display text-3xl font-bold leading-tight" style={{color: 'var(--cream)'}}>
+                    {course.name}
+                  </h1>
+                  <div className="mt-1 body-serif" style={{color: 'var(--gold)'}}>
+                    <span className="italic">{course.location}</span>
+                    {course.designer && (
+                      <>
+                        <span className="dot-sep"></span>
+                        <span className="text-sm" style={{color: 'rgba(244,237,225,0.7)'}}>
+                          {course.designer}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button onClick={() => setShowCourseList(true)} className="btn-gold whitespace-nowrap">
+                  Change
+                </button>
+              </div>
+
+              <div className="flex justify-center mt-5">
+                <select
+                  value={playMode}
+                  onChange={(e) => changePlayMode(e.target.value)}
+                  className="holes-dropdown"
+                >
+                  <option value="front">Front Nine · Holes 1–9</option>
+                  <option value="back">Back Nine · Holes 10–18</option>
+                  <option value="full">Full Eighteen · Holes 1–18</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* MAP */}
+          <div className="map-frame fade-in">
+            <iframe
+              key={course.id}
+              title={`${course.name} satellite map`}
+              src={`https://maps.google.com/maps?q=${course.lat},${course.lng}&t=k&z=16&output=embed`}
+              width="100%"
+              height="240"
+              style={{ border: 0, display: 'block', filter: 'saturate(0.85) contrast(1.05)' }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div className="text-center pt-2 pb-1" style={{background: 'var(--forest-deep)'}}>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(course.name + ' ' + course.location)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="uppercase-tight text-[10px]"
+                style={{color: 'var(--gold)'}}
+              >
+                Open in Google Maps →
+              </a>
+            </div>
+          </div>
+
+          {/* TABS */}
+          <div className="flex border-b" style={{background: 'var(--paper)', borderColor: 'rgba(0,0,0,0.1)'}}>
+            {[
+              { id: 'play', label: 'Play' },
+              { id: 'scorecard', label: 'Scorecard' },
+              { id: 'rounds', label: 'Rounds' }
+            ].map(t => (
+              <button key={t.id} onClick={() => setView(t.id)}
+                className={`tab flex-1 py-3.5 uppercase-tight text-xs ${view === t.id ? 'tab-active' : ''}`}
+                style={{color: view === t.id ? 'var(--ink)' : 'var(--ink-mute)'}}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* PLAY VIEW */}
+          {view === 'play' && (
+            <div className="fade-in">
+              <div className="px-6 py-7 text-center" style={{background: 'var(--paper-warm)'}}>
+                <div className="uppercase-tight text-[10px]" style={{color: 'var(--burgundy)'}}>
+                  Hole · Number {currentHole}
+                </div>
+                <div className="hole-numeral text-[7rem] my-1" style={{color: 'var(--ink)'}}>
+                  {hole.number}
+                </div>
+                <div className="editorial italic text-xl" style={{color: 'var(--ink-soft)'}}>
+                  Par {hole.par}
+                </div>
+                <div className="body-serif text-base mt-1" style={{color: 'var(--ink-mute)'}}>
+                  {hole.yards} yards
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between px-5 py-3 border-y" style={{borderColor: 'rgba(0,0,0,0.08)', background: 'var(--cream)'}}>
+                <button onClick={() => goToHole(currentHole - 1)} disabled={currentHole === 1} className="btn-ghost">
+                  ← Prev
+                </button>
+                <div className="body-serif italic text-sm" style={{color: 'var(--ink-mute)'}}>
+                  Hole {currentHole} <span style={{color: 'var(--gold-deep)'}}>·</span> {currentHole - startHole + 1} <span style={{color: 'var(--gold-deep)'}}>of</span> {holesPlayed}
+                </div>
+                <button onClick={() => goToHole(currentHole + 1)} disabled={currentHole === holesPlayed} className="btn-ghost">
+                  Next →
+                </button>
+              </div>
+
+              <div className="px-6 py-6">
+                <div className="text-center mb-5">
+                  <div className="uppercase-tight text-[10px] mb-3" style={{color: 'var(--ink-mute)'}}>
+                    Strokes Recorded
+                  </div>
+                  <div className={`inline-block px-10 py-3 rounded-sm score-numeral text-6xl ${scoreClass(scores[currentHole - 1], hole.par)}`}>
+                    {scores[currentHole - 1] || '—'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-5 gap-1.5 mb-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                    <button key={n} onClick={() => setScore(n)}
+                      className={`score-btn py-3.5 rounded-sm text-xl ${scores[currentHole - 1] === n ? 'score-btn-active' : 'score-btn-idle'}`}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => setScore(0)} className="w-full py-1.5 text-xs body-serif italic" style={{color: 'var(--ink-mute)'}}>
+                  clear score
+                </button>
+              </div>
+
+              <div className="border-t pt-4 pb-3 px-2 grid grid-cols-4 gap-1" style={{borderColor: 'rgba(184,137,61,0.3)', background: 'var(--paper-warm)'}}>
+                <div className="stat-card">
+                  <div className="stat-label">Total</div>
+                  <div className="stat-value">{totalScore || '—'}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">vs Par</div>
+                  <div className={`stat-value ${diff > 0 ? 'stat-value-bad' : diff < 0 ? 'stat-value-good' : ''}`}>
+                    {playedHoles === 0 ? '—' : formatDiff(diff)}
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Holes</div>
+                  <div className="stat-value">{playedHoles}<span style={{color: 'var(--ink-mute)', fontSize: '0.9rem'}}>/{holesPlayed}</span></div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-label">Hcp Est</div>
+                  <div className="stat-value">{handicapEstimate !== null ? formatDiff(handicapEstimate) : '—'}</div>
+                </div>
+              </div>
+              <div className="text-center pb-3 px-6 body-serif italic text-xs" style={{color: 'var(--ink-mute)', background: 'var(--paper-warm)'}}>
+                Estimated handicap. A formal index requires multiple rounds with course rating &amp; slope.
+              </div>
+            </div>
+          )}
+
+          {/* SCORECARD VIEW */}
+          {view === 'scorecard' && (
+            <div className="px-5 py-5 fade-in">
+              <div className="text-center mb-4">
+                <div className="uppercase-tight text-[10px]" style={{color: 'var(--burgundy)'}}>The Card</div>
+                <h2 className="display text-2xl font-bold mt-1" style={{color: 'var(--ink)'}}>{course.name}</h2>
+                <div className="body-serif italic text-sm mt-0.5" style={{color: 'var(--ink-mute)'}}>
+                  {playMode === 'front' ? 'Front Nine' : playMode === 'back' ? 'Back Nine' : 'Eighteen Holes'}
+                </div>
+                <div className="ornament my-3 max-w-[180px] mx-auto" />
+              </div>
+
+              <div className="overflow-x-auto rounded-sm border" style={{borderColor: 'rgba(0,0,0,0.1)'}}>
+                <table className="scorecard-table">
+                  <thead>
+                    <tr>
+                      <th className="text-left">Hole</th>
+                      <th>Par</th>
+                      <th>Yds</th>
+                      <th>Score</th>
+                      <th>±</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(playMode === 'front' || playMode === 'full') && (
+                      <>
+                        {course.holes.slice(0, 9).map((h, i) => (
+                          <tr key={h.number}>
+                            <td className="display font-semibold">{h.number}</td>
+                            <td className="text-center">{h.par}</td>
+                            <td className="text-center" style={{color: 'var(--ink-mute)'}}>{h.yards}</td>
+                            <td className="text-center">
+                              <span className={`inline-block w-7 h-7 leading-7 rounded-sm score-numeral ${scoreClass(scores[i], h.par)}`}>
+                                {scores[i] || '—'}
+                              </span>
+                            </td>
+                            <td className="text-center body-serif italic">
+                              {scores[i] ? formatDiff(scores[i] - h.par) : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="subtotal">
+                          <td className="uppercase-tight text-xs">Out</td>
+                          <td className="text-center">{course.holes.slice(0, 9).reduce((s, h) => s + h.par, 0)}</td>
+                          <td className="text-center">{course.holes.slice(0, 9).reduce((s, h) => s + h.yards, 0).toLocaleString()}</td>
+                          <td className="text-center score-numeral">{scores.slice(0, 9).reduce((a, b) => a + b, 0) || '—'}</td>
+                          <td></td>
+                        </tr>
+                      </>
+                    )}
+                    {(playMode === 'back' || playMode === 'full') && (
+                      <>
+                        {course.holes.slice(9, 18).map((h, i) => (
+                          <tr key={h.number}>
+                            <td className="display font-semibold">{h.number}</td>
+                            <td className="text-center">{h.par}</td>
+                            <td className="text-center" style={{color: 'var(--ink-mute)'}}>{h.yards}</td>
+                            <td className="text-center">
+                              <span className={`inline-block w-7 h-7 leading-7 rounded-sm score-numeral ${scoreClass(scores[i + 9], h.par)}`}>
+                                {scores[i + 9] || '—'}
+                              </span>
+                            </td>
+                            <td className="text-center body-serif italic">
+                              {scores[i + 9] ? formatDiff(scores[i + 9] - h.par) : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="subtotal">
+                          <td className="uppercase-tight text-xs">In</td>
+                          <td className="text-center">{course.holes.slice(9, 18).reduce((s, h) => s + h.par, 0)}</td>
+                          <td className="text-center">{course.holes.slice(9, 18).reduce((s, h) => s + h.yards, 0).toLocaleString()}</td>
+                          <td className="text-center score-numeral">{scores.slice(9, 18).reduce((a, b) => a + b, 0) || '—'}</td>
+                          <td></td>
+                        </tr>
+                      </>
+                    )}
+                    <tr className="total">
+                      <td className="uppercase-tight text-xs">Total</td>
+                      <td className="text-center">{totalPar}</td>
+                      <td className="text-center">{activeHoles.reduce((s, h) => s + h.yards, 0).toLocaleString()}</td>
+                      <td className="text-center score-numeral text-lg">{totalScore || '—'}</td>
+                      <td className="text-center body-serif italic">
+                        {playedHoles === 0 ? '—' : formatDiff(diff)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-5">
+                <div className="divider-fancy"><span>Legend</span></div>
+                <div className="flex flex-wrap gap-1.5 justify-center text-[10px] uppercase-tight">
+                  <span className="px-2.5 py-1 rounded-sm score-eagle">Eagle</span>
+                  <span className="px-2.5 py-1 rounded-sm score-birdie">Birdie</span>
+                  <span className="px-2.5 py-1 rounded-sm score-par">Par</span>
+                  <span className="px-2.5 py-1 rounded-sm score-bogey">Bogey</span>
+                  <span className="px-2.5 py-1 rounded-sm score-double">Double+</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SAVED ROUNDS VIEW */}
+          {view === 'rounds' && (
+            <div className="px-5 py-5 fade-in">
+              <div className="text-center mb-4">
+                <div className="uppercase-tight text-[10px]" style={{color: 'var(--burgundy)'}}>The Ledger</div>
+                <h2 className="display text-2xl font-bold mt-1" style={{color: 'var(--ink)'}}>
+                  Saved Rounds
+                </h2>
+                <div className="body-serif italic text-sm" style={{color: 'var(--ink-mute)'}}>
+                  {savedRounds.length} {savedRounds.length === 1 ? 'entry' : 'entries'}
+                </div>
+                <div className="ornament my-3 max-w-[180px] mx-auto" />
+              </div>
+
+              {savedRounds.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="display text-5xl italic mb-3" style={{color: 'var(--gold-deep)'}}>—</div>
+                  <p className="editorial italic text-lg" style={{color: 'var(--ink-soft)'}}>No rounds recorded yet.</p>
+                  <p className="body-serif text-sm mt-2" style={{color: 'var(--ink-mute)'}}>
+                    Complete a round and tap <em>Save Round</em> to keep it here.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {savedRounds.map(r => (
+                    <div key={r.id} className="border rounded-sm p-4 fade-up" style={{borderColor: 'rgba(0,0,0,0.12)', background: 'var(--cream)'}}>
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="display font-semibold text-base truncate" style={{color: 'var(--ink)'}}>
+                            {r.name}
+                          </div>
+                          <div className="body-serif italic text-xs mt-0.5" style={{color: 'var(--ink-mute)'}}>
+                            {new Date(r.date).toLocaleString('en-US', {dateStyle: 'medium', timeStyle: 'short'})}
+                          </div>
+                          <div className="body-serif text-sm mt-1" style={{color: 'var(--ink-soft)'}}>
+                            {r.courseName}
+                            <span className="dot-sep"></span>
+                            <span className="italic">{r.holesPlayed} holes</span>
+                          </div>
+                        </div>
+                        <button onClick={() => deleteRound(r.id)} className="text-xs body-serif italic" style={{color: 'var(--burgundy)'}}>
+                          delete
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t" style={{borderColor: 'rgba(184,137,61,0.3)'}}>
+                        <div className="text-center">
+                          <div className="stat-label">Score</div>
+                          <div className="score-numeral text-2xl" style={{color: 'var(--ink)'}}>{r.totalScore}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="stat-label">Par</div>
+                          <div className="score-numeral text-2xl" style={{color: 'var(--ink)'}}>{r.totalPar}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="stat-label">vs Par</div>
+                          <div className={`score-numeral text-2xl ${r.diff > 0 ? 'stat-value-bad' : r.diff < 0 ? 'stat-value-good' : ''}`}>
+                            {formatDiff(r.diff)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* END-OF-ROUND SAVE PROMPT */}
+          {showSavePrompt && (
+            <div className="fixed inset-0 modal-bg flex items-center justify-center z-50 p-4 fade-in">
+              <div className="paper rounded-sm max-w-sm w-full overflow-hidden" style={{background: 'var(--cream)'}}>
+                <div className="hero text-center px-6 py-5">
+                  <div className="relative" style={{zIndex: 1}}>
+                    <div className="uppercase-tight text-[10px]" style={{color: 'var(--gold)'}}>
+                      Round Complete
+                    </div>
+                    <div className="ornament my-2 max-w-[100px] mx-auto" />
+                    <h2 className="display text-2xl font-bold italic" style={{color: 'var(--cream)'}}>
+                      A Fine Showing
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="px-6 py-5 text-center">
+                  <div className="body-serif italic text-base mb-4" style={{color: 'var(--ink-soft)'}}>
+                    {playMode === 'front' ? 'Front nine' : playMode === 'back' ? 'Back nine' : 'All eighteen holes'} recorded at <span className="display font-semibold not-italic">{course.name}</span>.
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 my-5 py-4 border-y" style={{borderColor: 'rgba(184,137,61,0.4)'}}>
+                    <div>
+                      <div className="stat-label">Score</div>
+                      <div className="score-numeral text-3xl" style={{color: 'var(--ink)'}}>{totalScore}</div>
+                    </div>
+                    <div>
+                      <div className="stat-label">Par</div>
+                      <div className="score-numeral text-3xl" style={{color: 'var(--ink)'}}>{totalPar}</div>
+                    </div>
+                    <div>
+                      <div className="stat-label">vs Par</div>
+                      <div className={`score-numeral text-3xl ${diff > 0 ? 'stat-value-bad' : diff < 0 ? 'stat-value-good' : ''}`}>
+                        {formatDiff(diff)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {handicapEstimate !== null && (
+                    <div className="body-serif italic text-sm mb-5" style={{color: 'var(--ink-mute)'}}>
+                      Estimated handicap: <span className="display font-semibold not-italic" style={{color: 'var(--ink)'}}>{formatDiff(handicapEstimate)}</span>
+                    </div>
+                  )}
+
+                  <div className="editorial italic text-base mb-4" style={{color: 'var(--burgundy)'}}>
+                    Save this round to your ledger?
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={dismissSavePrompt} className="btn-ghost flex-1">
+                      Not Now
+                    </button>
+                    <button onClick={saveRound} className="btn-primary flex-1">
+                      Save Round
+                    </button>
+                  </div>
+                  <button onClick={startNewRound} className="w-full mt-3 py-2 body-serif italic text-xs" style={{color: 'var(--ink-mute)'}}>
+                    or, begin a new round
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* COURSE PICKER MODAL */}
+          {showCourseList && (
+            <div className="fixed inset-0 modal-bg flex items-center justify-center z-50 p-4 fade-in"
+              onClick={() => setShowCourseList(false)}
+            >
+              <div className="paper rounded-sm max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+                style={{background: 'var(--cream)'}}
+              >
+                <div className="hero text-center px-5 py-4 relative">
+                  <div className="relative" style={{zIndex: 1}}>
+                    <div className="uppercase-tight text-[10px]" style={{color: 'var(--gold)'}}>Select</div>
+                    <h2 className="display text-2xl font-bold" style={{color: 'var(--cream)'}}>Choose a Course</h2>
+                    <button onClick={() => setShowCourseList(false)}
+                      className="absolute top-0 right-0 text-2xl leading-none editorial italic"
+                      style={{color: 'var(--gold)'}}
+                    >×</button>
+                  </div>
+                </div>
+                <div className="overflow-y-auto">
+                  {REGIONS.map(region => {
+                    const inRegion = COURSES.filter(c => c.region === region);
+                    if (!inRegion.length) return null;
+                    return (
+                      <div key={region}>
+                        <div className="px-4 pt-4 pb-2">
+                          <div className="divider-fancy" style={{padding: 0}}>
+                            <span className="display italic" style={{color: 'var(--burgundy)', fontSize: '0.95rem'}}>
+                              {region}
+                            </span>
+                          </div>
+                        </div>
+                        {inRegion.map(c => (
+                          <CourseRow key={c.id} course={c} active={c.id === courseId} onPick={() => changeCourse(c.id)} />
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <div className="text-center py-5 px-5" style={{background: 'var(--forest-deep)'}}>
+            <div className="ornament max-w-[180px] mx-auto mb-2" />
+            <div className="display italic text-sm" style={{color: 'var(--cream)'}}>
+              The Scorecard
+            </div>
+            <div className="uppercase-tight text-[9px] mt-1" style={{color: 'var(--gold)'}}>
+              {COURSES.length} Courses · Ohio &amp; Midwest
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function CourseRow({ course, active, onPick }) {
+      const totalPar = course.holes.reduce((s, h) => s + h.par, 0);
+      const totalYds = course.holes.reduce((s, h) => s + h.yards, 0);
+      return (
+        <button onClick={onPick} className={`course-row w-full text-left px-5 py-3 ${active ? 'active' : ''}`}>
+          <div className="display font-semibold text-base" style={{color: 'var(--ink)'}}>
+            {course.name}
+          </div>
+          <div className="body-serif italic text-sm" style={{color: 'var(--ink-mute)'}}>
+            {course.location}
+          </div>
+          <div className="text-[11px] uppercase-tight mt-1" style={{color: 'var(--gold-deep)'}}>
+            Par {totalPar}
+            <span className="dot-sep"></span>
+            {totalYds.toLocaleString()} yds
+            {course.designer && (<><span className="dot-sep"></span>{course.designer}</>)}
+          </div>
+        </button>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
